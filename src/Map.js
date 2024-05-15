@@ -1,4 +1,5 @@
-import React, { useCallback, useRef, useState } from 'react';
+// src/Map.js
+import React, { useCallback, useState } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
 const containerStyle = {
@@ -7,8 +8,8 @@ const containerStyle = {
 };
 
 const center = {
-  lat: -3.745,
-  lng: -38.523
+  lat: 13.73826,
+  lng: 100.53241
 };
 
 function Map() {
@@ -18,7 +19,7 @@ function Map() {
   });
 
   const [map, setMap] = useState(null);
-  const [marker, setMarker] = useState(null);
+  const [markers, setMarkers] = useState([]);
 
   const onLoad = useCallback(function callback(map) {
     setMap(map);
@@ -29,10 +30,14 @@ function Map() {
   }, []);
 
   const handleMapClick = (event) => {
-    setMarker({
-      lat: event.latLng.lat(),
-      lng: event.latLng.lng()
-    });
+    setMarkers(current => [
+      ...current,
+      {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+        time: new Date(),
+      }
+    ]);
   };
 
   return isLoaded ? (
@@ -44,7 +49,12 @@ function Map() {
       onUnmount={onUnmount}
       onClick={handleMapClick}
     >
-      {marker && <Marker position={marker} />}
+      {markers.map((marker, index) => (
+        <Marker
+          key={index}
+          position={{ lat: marker.lat, lng: marker.lng }}
+        />
+      ))}
     </GoogleMap>
   ) : <></>;
 }
