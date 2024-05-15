@@ -1,39 +1,52 @@
-// src/Map.js
-import React, { useState } from 'react';
-import GoogleMapReact from 'google-map-react';
-import DustScoreMarker from './DustScoreMarker';
+import React, { useCallback, useRef, useState } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
-const Map = ({ 
-  center = { lat: 40.748817, lng: -73.985428 }, // Default coordinates (New York)
-  zoom = 11 
-}) => {
-  const [markerPosition, setMarkerPosition] = useState(null);
-  const [dustScore, setDustScore] = useState(null); // Example dust score
-
-  const handleMapClick = ({ lat, lng }) => {
-    console.log("Map clicked at: ", lat, lng);
-    setMarkerPosition({ lat, lng });
-    setDustScore(Math.floor(Math.random() * 100)); // Example dust score calculation
-  };
-
-  return (
-    <div style={{ height: '100vh', width: '100%' }}>
-      <GoogleMapReact
-        bootstrapURLKeys={{ key: 'YOUR_API_KEY' }}
-        defaultCenter={center}
-        defaultZoom={zoom}
-        onClick={({ lat, lng }) => handleMapClick({ lat, lng })}
-      >
-        {markerPosition && (
-          <DustScoreMarker 
-            lat={markerPosition.lat}
-            lng={markerPosition.lng}
-            text={dustScore}
-          />
-        )}
-      </GoogleMapReact>
-    </div>
-  );
+const containerStyle = {
+  width: '100%',
+  height: '400px'
 };
 
-export default Map;
+const center = {
+  lat: -3.745,
+  lng: -38.523
+};
+
+function Map() {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
+  });
+
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
+
+  const onLoad = useCallback(function callback(map) {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(function callback(map) {
+    setMap(null);
+  }, []);
+
+  const handleMapClick = (event) => {
+    setMarker({
+      lat: event.latLng.lat(),
+      lng: event.latLng.lng()
+    });
+  };
+
+  return isLoaded ? (
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={10}
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+      onClick={handleMapClick}
+    >
+      {marker && <Marker position={marker} />}
+    </GoogleMap>
+  ) : <></>;
+}
+
+export default React.memo(Map);
